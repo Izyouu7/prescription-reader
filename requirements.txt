@@ -5,3 +5,4 @@ pillow
 pillow-heif
 python-multipart
 python-dotenv
+jinja2
