@@ -1,0 +1,6 @@
+.env
+__pycache__/
+*.py[cod]
+history.json
+private_uploads/
+static/uploads/

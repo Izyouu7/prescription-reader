@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="description" content="ระบบวิเคราะห์ใบสั่งยาอัจฉริยะ - ถ่ายรูปใบสั่งยา แล้วรับตารางการทานยาเข้าใจง่ายทันที">
+<meta name="theme-color" content="#1A2B4A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>💊 Prescription Reader — ระบบอ่านใบสั่งยาอัจฉริยะ</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<!-- Header -->
+<header class="app-header">
+  <h1><span class="logo-icon">💊</span> Prescription Reader</h1>
+  <button id="btn-theme-toggle" class="btn-theme-toggle" onclick="App.toggleTheme()" title="สลับโหมดสว่าง/มืด">
+    <span id="theme-icon" class="theme-icon">☀️</span>
+  </button>
+</header>
+
+<!-- ═══ PAGE: Upload ═══ -->
+<div id="page-upload" class="page active">
+<div class="upload-hero">
+<h2>สแกนใบสั่งยา</h2>
+<p>ถ่ายรูปหรือเลือกภาพใบสั่งยาเพื่อเริ่มวิเคราะห์</p>
+</div>
+
+<div class="glass-card">
+<div id="upload-zone" class="upload-zone">
+<span class="upload-icon">📷</span>
+<div class="upload-text">ลากวางรูปภาพที่นี่</div>
+<div class="upload-hint">หรือกดเพื่อเลือกไฟล์ (JPG, PNG, WEBP)</div>
+</div>
+
+<div id="preview-container" class="preview-container">
+<div class="preview-image-wrap">
+<img id="preview-image" src="" alt="Preview">
+<button id="btn-remove" class="btn-remove-preview" title="ลบรูป">✕</button>
+</div>
+<div id="preview-filename" class="preview-filename"></div>
+</div>
+
+<div class="upload-actions">
+<button id="btn-camera" class="btn btn-camera">
+<span>📸</span> ถ่ายรูป
+</button>
+<button id="btn-browse" class="btn btn-secondary">
+<span>📁</span> เลือกไฟล์
+</button>
+</div>
+
+<button id="btn-analyze" class="btn btn-primary" style="width:100%" disabled>
+<span>🔬</span> วิเคราะห์ใบสั่งยา
+</button>
+</div>
+
+<input type="file" id="file-input" accept="image/*" hidden>
+<input type="file" id="camera-input" accept="image/*" capture="environment" hidden>
+
+<!-- Steps Guide -->
+<div class="steps-container glass-card">
+  <div class="step-item">
+    <div class="step-number">1</div>
+    <div class="step-text">
+      <strong>📸 ถ่ายภาพใบสั่งยา</strong>
+      <span>รูปภาพคมชัดและมีแสงเพียงพอ</span>
+    </div>
+  </div>
+  <div class="step-item">
+    <div class="step-number">2</div>
+    <div class="step-text">
+      <strong>🔬 ตรวจสอบความปลอดภัย</strong>
+      <span>ระบบแยกชื่อยาและสรรพคุณอย่างชัดเจน</span>
+    </div>
+  </div>
+  <div class="step-item">
+    <div class="step-number">3</div>
+    <div class="step-text">
+      <strong>📅 บันทึกลงปฏิทินยา</strong>
+      <span>ติดตามและดูแลการทานยาในทุกวัน</span>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ PAGE: Result ═══ -->
+<div id="page-result" class="page">
+  <!-- Empty State (Shown when no prescription has been scanned yet) -->
+  <div id="result-empty-state" class="glass-card animate-in" style="text-align:center; padding:48px 20px;">
+    <span style="font-size:3.5rem; display:block; margin-bottom:16px;">🔬</span>
+    <h3 style="font-size:1.1rem; font-weight:700; color:var(--text-primary); margin-bottom:8px;">ยังไม่มีข้อมูลการสแกน</h3>
+    <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.4; margin-bottom:20px;">กรุณาสแกนใบสั่งยาหรือเลือกรายการจากประวัติเพื่อแสดงผลวิเคราะห์ยา</p>
+    <button class="btn btn-primary" onclick="App.goToUpload()" style="margin:0 auto;">📷 สแกนใบสั่งยา</button>
+  </div>
+
+  <!-- Actual Result Content (Hidden by default, shown only when data is present) -->
+  <div id="result-content-wrap" style="display:none;">
+    <div class="result-header">
+      <span class="success-icon">✅</span>
+      <h2>ผลการวิเคราะห์</h2>
+    </div>
+
+    <!-- Patient info -->
+    <div id="result-patient" class="glass-card animate-in"></div>
+
+    <!-- Scanned Image Preview -->
+    <div id="result-image-card" class="glass-card animate-in" style="margin-bottom:16px; display:none; padding:0; overflow:hidden;">
+      <div style="padding:10px 14px; border-bottom:1px solid var(--card-border); font-weight:700; color:var(--text-primary); display:flex; justify-content:space-between; align-items:center;">
+        <span style="display:flex; align-items:center; gap:6px;">📷 รูปภาพใบสั่งยาที่สแกน</span>
+        <button class="btn-go-today" style="padding:3px 10px; font-size:0.75rem;" onclick="App.toggleResultImage()">ซ่อน/แสดง</button>
+      </div>
+      <div id="result-image-container" style="text-align:center; padding:12px; background:rgba(0,0,0,0.15);">
+        <img id="result-prescription-img" src="" alt="Prescription Scan" style="max-width:100%; max-height:260px; border-radius:var(--radius-sm); box-shadow:0 4px 12px rgba(0,0,0,0.2); cursor:pointer;" onclick="App.showFullPrescriptionImage()">
+      </div>
+    </div>
+
+    <!-- Medications list (Old detailed cards layout) -->
+    <div id="result-medications"></div>
+
+    <!-- Actions -->
+    <div class="result-actions">
+      <button class="btn btn-secondary" onclick="App.goToUpload()">
+        <span>📷</span> สแกนใบใหม่
+      </button>
+      <button class="btn btn-primary" onclick="App.goToHistory()">
+        <span>📋</span> ดูประวัติ
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: Calendar (Daily Pill Planner) ═══ -->
+<div id="page-calendar" class="page">
+  <!-- Header -->
+  <div class="planner-header">
+    <h2>💊 ตารางกินยาประจำวัน</h2>
+    <p class="planner-subtitle">กดเลือกวันเพื่อดูรายการยาที่ต้องทาน</p>
+  </div>
+
+  <!-- Date Strip Navigator -->
+  <div class="date-strip-container glass-card">
+    <button class="date-strip-nav" onclick="App.shiftWeek(-1)">‹</button>
+    <div id="date-strip" class="date-strip"></div>
+    <button class="date-strip-nav" onclick="App.shiftWeek(1)">›</button>
+  </div>
+
+  <!-- Selected Date Label -->
+  <div id="planner-date-label" class="planner-date-label"></div>
+
+  <!-- Daily Schedule Cards -->
+  <div id="planner-daily-schedule"></div>
+</div>
+
+<!-- ═══ PAGE: History ═══ -->
+<div id="page-history" class="page">
+<div class="history-header">
+<h2>📋 ประวัติการสแกน</h2>
+<span id="history-badge" class="history-badge">0 รายการ</span>
+</div>
+
+<div id="history-list"></div>
+</div>
+
+<!-- ═══ Modal Popup for Medication Details ═══ -->
+<div id="med-modal" class="modal-overlay" onclick="App.closeMedModal(event)">
+<div class="modal-card glass-card animate-modal" onclick="event.stopPropagation()">
+<button class="modal-close-btn" onclick="App.closeMedModal()">✕</button>
+<div id="modal-content"></div>
+</div>
+</div>
+
+<!-- ═══ Loading Overlay ═══ -->
+<div id="loading-overlay" class="loading-overlay">
+<div class="spinner"></div>
+<div class="loading-text">🔬 กำลังวิเคราะห์ใบสั่งยา...</div>
+<div class="loading-subtext">กรุณารอสักครู่ ระบบ AI กำลังอ่านข้อมูลยา</div>
+</div>
+
+<!-- ═══ Bottom Navigation ═══ -->
+<nav class="bottom-nav">
+<button class="nav-item active" data-page="upload" onclick="App.navigate('upload')">
+<span class="nav-icon">📷</span>
+<span>สแกน</span>
+</button>
+<button class="nav-item" data-page="result" onclick="App.navigate('result')">
+<span class="nav-icon">💊</span>
+<span>ผลลัพธ์</span>
+</button>
+<button class="nav-item" data-page="calendar" onclick="App.navigate('calendar')">
+<span class="nav-icon">🗓️</span>
+<span>ปฏิทินยา</span>
+</button>
+<button class="nav-item" data-page="history" onclick="App.navigate('history')">
+<span class="nav-icon">📋</span>
+<span>ประวัติ</span>
+</button>
+</nav>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
